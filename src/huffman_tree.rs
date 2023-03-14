@@ -1,15 +1,15 @@
 
-pub struct Node{
-    value: Option<u8>,
-    probability: u32,
-    left: Option<Box<Node>>,
-    right: Option<Box<Node>>,
+struct Node{
+    pub value: Option<u8>,
+    pub value_frequency: u32,
+    pub left: Option<Box<Node>>,
+    pub right: Option<Box<Node>>,
 }
 impl Node {
     pub fn new(probability: u32, value: Option<u8>, left: Option<Box<Node>>, right: Option<Box<Node>>) -> Self{
         Self{
             value,
-            probability,
+            value_frequency: probability,
             left,
             right,
         }
@@ -17,9 +17,10 @@ impl Node {
     pub fn create_upper_node(src_left: Box<Node>, src_right: Box<Node>) -> Self{
         Self {
             value: None,
-            probability: src_left.probability + src_right.probability,
+            value_frequency: src_left.value_frequency + src_right.value_frequency,
             left: Some(src_left),
             right: Some(src_right),
         }
     }
+
 }
