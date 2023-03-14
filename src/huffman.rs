@@ -1,6 +1,15 @@
 use super::files::*;
 use super::huffman_tree::*;
 
+fn get_smallest_node_by_index(nodes: &Vec<Node>) -> usize{
+    let mut smallest_node = 0;
+    for i in 0..nodes.len(){
+        if nodes[i].value_frequency < nodes[smallest_node].value_frequency {
+            smallest_node = i;        }
+    }
+    return smallest_node;
+}
+
 pub fn create_huffman_tree(value_frequencies: Vec<Count>) -> Option<Node> {
     let mut nodes: Vec<Node> = Vec::new();
     for frequency in value_frequencies {
@@ -9,19 +18,12 @@ pub fn create_huffman_tree(value_frequencies: Vec<Count>) -> Option<Node> {
     }
 
     while nodes.len() > 1 {
+
         // find smallest two nodes according to probability and remove them from Vec
-        let mut smallest_frequency = (0, 0);
-        for i in 0..nodes.len(){
-            if nodes[i].value_frequency < nodes[smallest_frequency.0].value_frequency {
-                smallest_frequency.1 = smallest_frequency.0;
-                smallest_frequency.0 = i;
-            }
-            else if nodes[i].value_frequency < nodes[smallest_frequency.1].value_frequency {
-                smallest_frequency.1 = i;
-            }
-        }
+        let node_1 = Box::from(nodes.swap_remove(get_smallest_node_by_index(&nodes)));
+        let node_2 = Box::from(nodes.swap_remove(get_smallest_node_by_index(&nodes)));
         // call 'create_upper_node' and add the new node to nodes
-        let node = Node::create_upper_node(Box::from(nodes.swap_remove(smallest_frequency.0)), Box::from(nodes.swap_remove(smallest_frequency.1)));
+        let node = Node::create_upper_node(node_1, node_2);
         nodes.push(node);
     }
     return nodes.pop();
