@@ -1,5 +1,5 @@
 
-struct Node{
+pub struct Node{
     pub value: Option<u8>,
     pub value_frequency: u32,
     pub left: Option<Box<Node>>,
