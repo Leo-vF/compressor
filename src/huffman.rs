@@ -57,9 +57,9 @@ pub fn create_huffman_tree_from_bytestream(input: &Vec<u8>) -> Option<Node> {
 
 
 // takes a Huffman-Tree and returns a Hashmap with <value, huffman-code>
-pub fn get_hashmap_for_compression(huffman_tree:Node) -> HashMap<u8, str> {
-    let mut compression_hashmap:HashMap<u8, str> = HashMap::new();
-    
+pub fn get_hashmap_for_compression(huffman_tree:Node) -> HashMap<u8, Vec<u8>> {
+    let mut compression_hashmap:HashMap<u8, Vec<u8>> = HashMap::new();
+
     return compression_hashmap;
 }
 
