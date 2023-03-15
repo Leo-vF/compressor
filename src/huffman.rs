@@ -11,7 +11,7 @@ fn get_smallest_node_by_index(nodes: &Vec<Node>) -> usize {
     return smallest_node;
 }
 
-pub fn create_huffman_tree(value_frequencies: Vec<Count>) -> Option<Node> {
+pub fn create_huffman_tree(value_frequencies: &Vec<Count>) -> Option<Node> {
     let mut nodes: Vec<Node> = Vec::new();
     for frequency in value_frequencies {
         let node = Node::new(frequency.count, Some(frequency.char), None, None);
@@ -29,7 +29,7 @@ pub fn create_huffman_tree(value_frequencies: Vec<Count>) -> Option<Node> {
     return nodes.pop();
 }
 
-pub fn create_huffman_tree_from_bytestream(input: Vec<u8>) -> Option<Node> {
+pub fn create_huffman_tree_from_bytestream(input: &Vec<u8>) -> Option<Node> {
     let mut value_frequencies: Vec<Count> = Vec::new();
     for i in 0..input.len() {
         // if value is fresh create new Count else increase 'probs' by 1;
@@ -49,6 +49,6 @@ pub fn create_huffman_tree_from_bytestream(input: Vec<u8>) -> Option<Node> {
             value_frequencies.push(count);
         }
     }
-    return create_huffman_tree(value_frequencies);
+    return create_huffman_tree(&value_frequencies);
 }
 

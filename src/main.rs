@@ -18,5 +18,5 @@ fn main() {
     test.push(23);
     test.push(21);
 
-    create_huffman_tree_from_bytestream(test);
+    create_huffman_tree_from_bytestream(&test);
 }
