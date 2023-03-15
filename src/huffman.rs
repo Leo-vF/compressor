@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use super::files::*;
 use super::huffman_tree::*;
 
@@ -11,6 +12,7 @@ fn get_smallest_node_by_index(nodes: &Vec<Node>) -> usize {
     return smallest_node;
 }
 
+// takes a &Vec<Count> and returns a Huffman-tree
 pub fn create_huffman_tree(value_frequencies: &Vec<Count>) -> Option<Node> {
     let mut nodes: Vec<Node> = Vec::new();
     for frequency in value_frequencies {
@@ -29,6 +31,7 @@ pub fn create_huffman_tree(value_frequencies: &Vec<Count>) -> Option<Node> {
     return nodes.pop();
 }
 
+// creates a Huffman-tree from a bytestream
 pub fn create_huffman_tree_from_bytestream(input: &Vec<u8>) -> Option<Node> {
     let mut value_frequencies: Vec<Count> = Vec::new();
     for i in 0..input.len() {
@@ -52,3 +55,26 @@ pub fn create_huffman_tree_from_bytestream(input: &Vec<u8>) -> Option<Node> {
     return create_huffman_tree(&value_frequencies);
 }
 
+
+// takes a Huffman-Tree and returns a Hashmap with <value, huffman-code>
+pub fn get_hashmap_for_compression(huffman_tree:Node) -> HashMap<u8, str> {
+    let mut compression_hashmap:HashMap<u8, str> = HashMap::new();
+    
+    return compression_hashmap;
+}
+
+
+// takes a the header of an comp-file and returns a Hashmap with <huffman-code, value>
+pub fn get_hashmap_for_decompression(header:Vec<u8>) -> HashMap<Vec<u8>, u8> {
+    let mut decompression_hashmap:HashMap<Vec<u8>, u8> = HashMap::new();
+
+    return decompression_hashmap;
+}
+
+
+// header format: 1Byte: value; 1Byte: len_in_bits_of_huffman-code; 1-(32):Bytes for huffman-code
+pub fn get_huffman_code_header_for_file(huffman_code:HashMap<u8, Vec<u8>>) -> Vec<u8> {
+    let mut header:Vec<u8> = Vec::new();
+
+    return header;
+}
