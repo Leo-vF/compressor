@@ -55,7 +55,6 @@ pub fn create_huffman_tree_from_bytestream(input: &Vec<u8>) -> Node {
     return create_huffman_tree(&value_frequencies);
 }
 
-
 // takes a Huffman-Tree and returns a Hashmap with <value, huffman-code>
 pub fn get_hashmap_for_compression(huffman_tree: Box<Node>) -> Box<HashMap<u8, Vec<u8>>> {
     let mut compression_hashmap: Box<HashMap<u8, Vec<u8>>> = Box::new(HashMap::new());
@@ -63,7 +62,7 @@ pub fn get_hashmap_for_compression(huffman_tree: Box<Node>) -> Box<HashMap<u8, V
     rec_hashmap_for_compression(&mut Some(huffman_tree), &mut compression_hashmap, &mut huffman_code);
     return compression_hashmap;
 }
-fn rec_hashmap_for_compression(node: &mut Option<Box<Node>>, mut compression_hashmap: &mut Box<HashMap<u8, Vec<u8>>>, mut current_huffman_code: &mut Vec<u8>) {
+fn rec_hashmap_for_compression(node: &mut Option<Box<Node>>, compression_hashmap: &mut Box<HashMap<u8, Vec<u8>>>, current_huffman_code: &mut Vec<u8>) {
     if node.is_some() {
         if node.as_deref_mut().unwrap().value.is_some() {
             compression_hashmap.insert(node.as_deref_mut().unwrap().value.unwrap(), current_huffman_code.clone());
@@ -83,17 +82,52 @@ fn rec_hashmap_for_compression(node: &mut Option<Box<Node>>, mut compression_has
     }
 }
 
-
 // takes a the header of an comp-file and returns a Hashmap with <huffman-code, value>
-pub fn get_hashmap_for_decompression(header: Vec<u8>) -> HashMap<Vec<u8>, u8> {
-    let mut decompression_hashmap:HashMap<Vec<u8>, u8> = HashMap::new();
+pub fn get_hashmap_for_decompression(mappings: Vec<HuffmanMapping>) -> Box<HashMap<Vec<u8>, u8>> {
+    let mut decompression_hashmap: Box<HashMap<Vec<u8>, u8>> = Box::new(HashMap::new());
+    for mut huffman_mapping in mappings {
+        let mut encoding: Vec<u8> = Vec::new();
+        let number_of_bits_in_last_byte = (huffman_mapping.len_of_encoding - (huffman_mapping.encoding.len()-1) as u8 * 8) as u8;
+        while huffman_mapping.encoding.len() > 1 {
+            let tmp = huffman_mapping.encoding.remove(0);
+            for k in 0..8 {
+                encoding.push((tmp >> (7-k)) & 0x1);
+            }
+        }
+        let tmp = huffman_mapping.encoding.remove(0);
+        for k in 0..number_of_bits_in_last_byte {
+            encoding.push((tmp >> (7-k)) & 0x1);
+        }
+
+        decompression_hashmap.insert(encoding, huffman_mapping.char);
+    }
 
     return decompression_hashmap;
 }
 
 // header format: 1Byte: value; 1Byte: len_in_bits_of_huffman-code; 1-(32):Bytes for huffman-code
-pub fn get_huffman_code_header_for_file(huffman_code: HashMap<u8, Vec<u8>>) -> Vec<HuffmanMapping> {
-    let mut header:Vec<HuffmanMapping> = Vec::new();
 
-    return header;
+pub fn get_huffman_code_header_for_file(huffman_codes: Box<HashMap<u8, Vec<u8>>>) -> Vec<HuffmanMapping> {
+    let mut mappings: Vec<HuffmanMapping> = Vec::new();
+    for key in huffman_codes.keys() {
+        let tmp = huffman_codes.get(key).unwrap();
+
+        let length_of_encoding = 1+((tmp.len()-1)/8);
+        let mut encoding: Vec<u8> = Vec::new();
+        for _ in 0..length_of_encoding-1 {
+            let mut encoding_byte: u8 = 0;
+            for k in 0..8 {
+                encoding_byte +=  tmp.get(k).unwrap() << (7 - k);
+            }
+            encoding.push(encoding_byte);
+        }
+        let mut last_encoding_byte: u8 = 0;
+        for k in 0..tmp.len()%8 {
+            last_encoding_byte +=  tmp.get(k).unwrap() << (7 - k);
+        }
+        encoding.push(last_encoding_byte);
+        let mapping = HuffmanMapping::new(*key, tmp.len() as u8, encoding);
+        mappings.push(mapping);
+    }
+    return mappings;
 }
