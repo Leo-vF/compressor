@@ -19,6 +19,16 @@ pub struct File {
     pub data: Vec<u8>,
 }
 
+impl HuffmanMapping {
+    fn linearize(&mut self) -> Vec<u8> {
+        let mut result = Vec::new();
+        result.push(self.char);
+        result.push(self.len_of_encoding);
+        result.append(&mut self.encoding);
+        return result;
+    }
+}
+
 pub fn read_comp_file(path: &str) -> File {
     let mut file: Vec<u8> = fs::read(path).unwrap();
     let mut n_mappings = file.remove(0);
@@ -47,9 +57,14 @@ pub fn read_file(path: &str) -> Vec<u8> {
     fs::read(path).unwrap()
 }
 
-pub fn write_comp_file(path: &str, file: File) {
-    // TODO: write number of counts as u8 in first byte of the file
-    // TODO: assemble u8 1's and 0's back to actual u8's to save space
+pub fn write_comp_file(path: &str, file: &mut File) {
+    let mut chars = Vec::new();
+    chars.push(file.mappings.len() as u8);
+    for mapping in &mut file.mappings {
+        chars.append(&mut mapping.linearize());
+    }
+    chars.append(&mut file.data);
+    fs::write(path, chars).unwrap();
 }
 
 pub fn write_file(path: &str, chars: Vec<u8>) {
