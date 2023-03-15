@@ -7,27 +7,39 @@ pub struct Count {
 }
 
 #[derive(Debug)]
+pub struct HuffmanMapping {
+    pub char: u8,
+    pub len_of_encoding: u8,
+    pub encoding: Vec<u8>,
+}
+
+#[derive(Debug)]
 pub struct File {
-    pub probs: Vec<Count>,
+    pub mappings: Vec<HuffmanMapping>,
     pub data: Vec<u8>,
 }
 
 pub fn read_comp_file(path: &str) -> File {
     let mut file: Vec<u8> = fs::read(path).unwrap();
-    let n_counts = file.remove(0) as usize;
-    let mut counts = Vec::new();
-    let mut n = 0;
-
-    while n >= 5 * n_counts {
-        counts.push(Count {
-            char: file[n],
-            count: u32::from_be_bytes([file[n + 1], file[n + 2], file[n + 3], file[n + 4]]),
+    let mut n_mappings = file.remove(0);
+    let mut mappings = Vec::new();
+    while n_mappings > 0 {
+        let char = file.remove(0);
+        let len_of_encoding = file.remove(0);
+        let mut encoding = Vec::new();
+        for _i in 0..len_of_encoding {
+            encoding.push(file.remove(0));
+        }
+        mappings.push(HuffmanMapping {
+            char,
+            len_of_encoding,
+            encoding,
         });
-        n += 5;
+        n_mappings -= 1;
     }
     File {
-        probs: counts,
-        data: vec![file[5 * n_counts]],
+        mappings,
+        data: file,
     }
 }
 
