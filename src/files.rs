@@ -20,6 +20,14 @@ pub struct File {
 }
 
 impl HuffmanMapping {
+    pub fn new(char: u8, len_of_encoding: u8, encoding: Vec<u8>) -> Self {
+        Self {
+            char,
+            len_of_encoding,
+            encoding,
+        }
+    }
+
     fn linearize(&mut self) -> Vec<u8> {
         let mut result = Vec::new();
         result.push(self.char);
