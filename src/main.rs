@@ -18,7 +18,7 @@ fn main() {
     test.push(23);
     test.push(21);
 
-    let mut tree = create_huffman_tree_from_bytestream(&test);
+    let tree = create_huffman_tree_from_bytestream(&test);
     let tmp = get_hashmap_for_compression(Box::from(tree));
     println!("{}❤️", tmp.len());
 

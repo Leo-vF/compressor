@@ -1,6 +1,4 @@
-use std::alloc::GlobalAlloc;
 use std::collections::HashMap;
-use std::ops::Deref;
 use super::files::*;
 use super::huffman_tree::*;
 
@@ -59,7 +57,7 @@ pub fn create_huffman_tree_from_bytestream(input: &Vec<u8>) -> Node {
 
 
 // takes a Huffman-Tree and returns a Hashmap with <value, huffman-code>
-pub fn get_hashmap_for_compression(mut huffman_tree: Box<Node>) -> Box<HashMap<u8, Vec<u8>>> {
+pub fn get_hashmap_for_compression(huffman_tree: Box<Node>) -> Box<HashMap<u8, Vec<u8>>> {
     let mut compression_hashmap: Box<HashMap<u8, Vec<u8>>> = Box::new(HashMap::new());
     let mut huffman_code:Vec<u8> = Vec::new();
     rec_hashmap_for_compression(&mut Some(huffman_tree), &mut compression_hashmap, &mut huffman_code);
@@ -92,7 +90,6 @@ pub fn get_hashmap_for_decompression(header: Vec<u8>) -> HashMap<Vec<u8>, u8> {
 
     return decompression_hashmap;
 }
-
 
 // header format: 1Byte: value; 1Byte: len_in_bits_of_huffman-code; 1-(32):Bytes for huffman-code
 pub fn get_huffman_code_header_for_file(huffman_code: HashMap<u8, Vec<u8>>) -> Vec<HuffmanMapping> {
