@@ -10,7 +10,6 @@ fn get_smallest_node_by_index(nodes: &Vec<Node>) -> usize {
             smallest_node = i;
         }
     }
-    println!("{}", smallest_node);
     return smallest_node;
 }
 
@@ -159,16 +158,20 @@ fn get_huffman_code_header_for_file(
 
         let length_of_encoding = 1 + ((tmp.len() as isize - 1) / 8) as usize;
         let mut encoding: Vec<u8> = Vec::new();
-        for _ in 0..length_of_encoding - 1 {
+        for i in 0..length_of_encoding - 1 {
             let mut encoding_byte: u8 = 0;
             for k in 0..8 {
-                encoding_byte += tmp.get(k).unwrap() << (7 - k);
+                encoding_byte += tmp.get((i * 8) + k).unwrap() << (7 - k);
             }
             encoding.push(encoding_byte);
         }
         let mut last_encoding_byte: u8 = 0;
-        for k in 0..tmp.len() % 8 {
-            last_encoding_byte += tmp.get(k).unwrap() << (7 - k);
+        let mut last_byte_offset = tmp.len() % 8;
+        if last_byte_offset == 0 {
+            last_byte_offset = 8;
+        }
+        for k in 0..last_byte_offset {
+            last_encoding_byte += tmp.get(((length_of_encoding - 1) * 8) + k).unwrap() << (7 - k);
         }
         encoding.push(last_encoding_byte);
         let mapping = HuffmanMapping::new(*key, tmp.len() as u8, encoding);
@@ -219,22 +222,18 @@ fn get_longest(map: &Box<HashMap<Vec<u8>, u8>>) -> usize {
     }
     return max;
 }
-
 pub fn decompress(compressed_file: File) -> Vec<u8> {
     let mut data: Vec<u8> = Vec::new();
     let huffman_code_to_byte = get_hashmap_for_decompression(compressed_file.mappings).clone();
     let length_of_longest_huffman_code = get_longest(&huffman_code_to_byte);
-    println!("{}", length_of_longest_huffman_code);
     let mut huffman_code: Vec<u8> = Vec::new();
     let mut _compressed_byte: u8 = 0;
     for i in 0..compressed_file.data.len() - 1 {
         _compressed_byte = *compressed_file.data.get(i).unwrap();
         for k in 0..8 {
             huffman_code.push((_compressed_byte >> 7 - k) & 0x1);
-            println!("{:?}", &*huffman_code);
             if huffman_code_to_byte.get(&*huffman_code).is_some() {
                 let data_byte = huffman_code_to_byte.get(&*huffman_code).unwrap().clone();
-                println!("{}", data_byte as char);
                 data.push(data_byte);
                 huffman_code.clear();
             }
