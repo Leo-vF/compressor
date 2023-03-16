@@ -156,12 +156,10 @@ pub fn compress(data: Vec<u8>) -> File {
         }
     }
     pos_in_byte = (pos_in_byte + 1)%8;
-    if pos_in_byte != 7 {
-        pos_in_byte = 0;
-    }
-    else {
+    if pos_in_byte != 0 {
         compressed_data.push(compressed_byte);
     }
+
     let mappings = get_huffman_code_header_for_file(huffman_codes);
     let compressed_file: File = File {
         mappings,
