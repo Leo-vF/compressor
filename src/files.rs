@@ -60,13 +60,11 @@ pub fn read_comp_file(path: &str) -> File {
         });
         n_mappings -= 1;
     }
-    let result = File {
+    File {
         last_byte_offset,
         mappings,
         data: file,
-    };
-    println!("{:?}", result);
-    return result;
+    }
 }
 
 pub fn read_file(path: &str) -> Vec<u8> {
