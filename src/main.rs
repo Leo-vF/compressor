@@ -1,14 +1,23 @@
-use crate::huffman::*;
+use std::env;
 
 mod files;
-mod huffman_tree;
 mod huffman;
+mod huffman_tree;
 
 fn main() {
-    let file: Vec<u8> = vec![12, 12, 12, 12, 42, 42, 12, 42, 23, 21];
-    println!("{:?}", file);
-    let compressed_file = compress(file);
-    println!("{:?}", compressed_file.data);
-    let decompressed_file = decompress(compressed_file);
-    println!("{:?}", decompressed_file);
+    let args: Vec<String> = env::args().collect();
+    assert_eq!(args.len(), 4);
+
+    let comp_filepath = &args[2];
+    let uncomp_filepath = &args[3];
+
+    if "d".eq(&args[1]) {
+        let comp_file = files::read_comp_file(&comp_filepath);
+        let decompressed_file = huffman::decompress(comp_file);
+        files::write_file(&uncomp_filepath, decompressed_file);
+    } else if "c".eq(&args[1]) {
+        let decompressed_file = files::read_file(&uncomp_filepath);
+        let mut comp_file = huffman::compress(decompressed_file);
+        files::write_comp_file(&comp_filepath, &mut comp_file);
+    }
 }
