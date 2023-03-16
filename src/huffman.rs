@@ -66,7 +66,13 @@ fn get_hashmap_for_compression(huffman_tree: Box<Node>) -> Box<HashMap<u8, Vec<u
 fn rec_hashmap_for_compression(node: &mut Option<Box<Node>>, compression_hashmap: &mut Box<HashMap<u8, Vec<u8>>>, current_huffman_code: &mut Vec<u8>) {
     if node.is_some() {
         if node.as_deref_mut().unwrap().value.is_some() {
-            compression_hashmap.insert(node.as_deref_mut().unwrap().value.unwrap(), current_huffman_code.clone());
+            if current_huffman_code.len() == 0 {
+                current_huffman_code.push(1);
+                compression_hashmap.insert(node.as_deref_mut().unwrap().value.unwrap(), current_huffman_code.clone());
+                current_huffman_code.pop();
+            } else {
+                compression_hashmap.insert(node.as_deref_mut().unwrap().value.unwrap(), current_huffman_code.clone());
+            }
         } else {
             if node.as_deref_mut().unwrap().left.is_some() {
                 current_huffman_code.push(1);
@@ -111,7 +117,7 @@ fn get_huffman_code_header_for_file(huffman_codes: Box<HashMap<u8, Vec<u8>>>) ->
     for key in huffman_codes.keys() {
         let tmp = huffman_codes.get(key).unwrap();
 
-        let length_of_encoding = 1 + ((tmp.len() - 1) / 8);
+        let length_of_encoding = 1 + ((tmp.len() as isize - 1) / 8) as usize;
         let mut encoding: Vec<u8> = Vec::new();
         for _ in 0..length_of_encoding - 1 {
             let mut encoding_byte: u8 = 0;
@@ -149,7 +155,9 @@ pub fn compress(data: Vec<u8>) -> File {
             }
         }
     }
-    compressed_data.push(compressed_byte);
+    if pos_in_byte != 7 {
+        compressed_data.push(compressed_byte);
+    }
     let mappings = get_huffman_code_header_for_file(huffman_codes);
     let compressed_file: File = File {
         mappings,
@@ -176,7 +184,7 @@ pub fn decompress(compressed_file: File) -> Vec<u8> {
         }
     }
     _compressed_byte = *compressed_file.data.get(compressed_file.data.len() - 1).unwrap();
-    for k in 0..8 - compressed_file.last_byte_offset {
+    for k in 0..(7-compressed_file.last_byte_offset) {
         huffman_code.push((_compressed_byte >> 7 - k) & 0x1);
         if huffman_code_to_byte.contains_key(&*huffman_code) {
             data.push(*huffman_code_to_byte.get(&*huffman_code).unwrap());
