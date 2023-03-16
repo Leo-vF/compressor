@@ -47,9 +47,10 @@ pub fn read_comp_file(path: &str) -> File {
         let char = file.remove(0);
         // this next line converts the len of encoding in bit size
         // to byte size via ceiling divsion by 8
-        let len_of_encoding = 1 + ((file.remove(0) as i8 - 1) / 8) as u8;
+        let len_of_encoding = file.remove(0);
+        let len_of_encoding_bytes = 1 + ((len_of_encoding as i8 - 1) / 8) as u8;
         let mut encoding = Vec::new();
-        for _i in 0..len_of_encoding {
+        for _i in 0..len_of_encoding_bytes {
             encoding.push(file.remove(0));
         }
         mappings.push(HuffmanMapping {
@@ -59,11 +60,13 @@ pub fn read_comp_file(path: &str) -> File {
         });
         n_mappings -= 1;
     }
-    File {
+    let result = File {
         last_byte_offset,
         mappings,
         data: file,
-    }
+    };
+    println!("{:?}", result);
+    return result;
 }
 
 pub fn read_file(path: &str) -> Vec<u8> {
