@@ -15,6 +15,7 @@ pub struct HuffmanMapping {
 
 #[derive(Debug)]
 pub struct File {
+    pub last_byte_offset: u8,
     pub mappings: Vec<HuffmanMapping>,
     pub data: Vec<u8>,
 }
@@ -40,6 +41,7 @@ impl HuffmanMapping {
 pub fn read_comp_file(path: &str) -> File {
     let mut file: Vec<u8> = fs::read(path).unwrap();
     let mut n_mappings = file.remove(0);
+    let last_byte_offset = file.remove(0);
     let mut mappings = Vec::new();
     while n_mappings > 0 {
         let char = file.remove(0);
@@ -56,6 +58,7 @@ pub fn read_comp_file(path: &str) -> File {
         n_mappings -= 1;
     }
     File {
+        last_byte_offset,
         mappings,
         data: file,
     }
@@ -68,6 +71,7 @@ pub fn read_file(path: &str) -> Vec<u8> {
 pub fn write_comp_file(path: &str, file: &mut File) {
     let mut chars = Vec::new();
     chars.push(file.mappings.len() as u8);
+    chars.push(file.last_byte_offset);
     for mapping in &mut file.mappings {
         chars.append(&mut mapping.linearize());
     }
