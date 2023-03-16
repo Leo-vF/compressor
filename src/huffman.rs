@@ -155,7 +155,11 @@ pub fn compress(data: Vec<u8>) -> File {
             }
         }
     }
+    pos_in_byte = (pos_in_byte + 1)%8;
     if pos_in_byte != 7 {
+        pos_in_byte = 0;
+    }
+    else {
         compressed_data.push(compressed_byte);
     }
     let mappings = get_huffman_code_header_for_file(huffman_codes);
@@ -184,7 +188,7 @@ pub fn decompress(compressed_file: File) -> Vec<u8> {
         }
     }
     _compressed_byte = *compressed_file.data.get(compressed_file.data.len() - 1).unwrap();
-    for k in 0..(7-compressed_file.last_byte_offset) {
+    for k in 0..(8-compressed_file.last_byte_offset) {
         huffman_code.push((_compressed_byte >> 7 - k) & 0x1);
         if huffman_code_to_byte.contains_key(&*huffman_code) {
             data.push(*huffman_code_to_byte.get(&*huffman_code).unwrap());
