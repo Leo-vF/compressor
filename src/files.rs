@@ -45,7 +45,9 @@ pub fn read_comp_file(path: &str) -> File {
     let mut mappings = Vec::new();
     while n_mappings > 0 {
         let char = file.remove(0);
-        let len_of_encoding = file.remove(0);
+        // this next line converts the len of encoding in bit size
+        // to byte size via ceiling divsion by 8
+        let len_of_encoding = 1 + ((file.remove(0) as i8 - 1) / 8) as u8;
         let mut encoding = Vec::new();
         for _i in 0..len_of_encoding {
             encoding.push(file.remove(0));
