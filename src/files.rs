@@ -40,7 +40,14 @@ impl HuffmanMapping {
 
 pub fn read_comp_file(path: &str) -> File {
     let mut file: Vec<u8> = fs::read(path).unwrap();
-    let mut n_mappings = file.remove(0);
+    let mut n_mappings = file.remove(0) as u16;
+    // Since there are up to 256 encodings, and at least one must be present
+    // and a u8's max value is 255 but 0 isnt used, we can use the 0 value
+    // as if it means 256 for that n_mappings needs to become a u16 with value 256
+    if n_mappings == 0 {
+        n_mappings = 256;
+    }
+
     let last_byte_offset = file.remove(0);
     let mut mappings = Vec::new();
     while n_mappings > 0 {
