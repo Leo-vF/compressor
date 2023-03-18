@@ -1,6 +1,7 @@
 use std::env;
 
 mod files;
+mod hashing;
 mod huffman;
 mod huffman_tree;
 

@@ -1,4 +1,5 @@
 use super::files::*;
+use super::hashing::*;
 use super::huffman_tree::*;
 use std::collections::HashMap;
 use std::ops::Deref;
@@ -58,8 +59,11 @@ fn create_huffman_tree_from_bytestream(input: &Vec<u8>) -> Node {
 }
 
 // takes a Huffman-Tree and returns a Hashmap with <value, huffman-code>
-fn get_hashmap_for_compression(huffman_tree: Box<&Node>) -> Box<HashMap<u8, Vec<u8>>> {
-    let mut compression_hashmap: Box<HashMap<u8, Vec<u8>>> = Box::new(HashMap::new());
+fn get_hashmap_for_compression(
+    huffman_tree: Box<&Node>,
+) -> Box<HashMap<u8, Vec<u8>, BuildCompressionHasher>> {
+    let mut compression_hashmap: Box<HashMap<u8, Vec<u8>, BuildCompressionHasher>> =
+        Box::new(HashMap::with_hasher(BuildCompressionHasher));
     let mut huffman_code: Vec<u8> = Vec::new();
     rec_hashmap_for_compression(
         &mut Some(huffman_tree),
@@ -71,7 +75,7 @@ fn get_hashmap_for_compression(huffman_tree: Box<&Node>) -> Box<HashMap<u8, Vec<
 
 fn rec_hashmap_for_compression(
     node: &Option<Box<&Node>>,
-    compression_hashmap: &mut Box<HashMap<u8, Vec<u8>>>,
+    compression_hashmap: &mut Box<HashMap<u8, Vec<u8>, BuildCompressionHasher>>,
     current_huffman_code: &mut Vec<u8>,
 ) {
     match &node {
@@ -150,7 +154,7 @@ fn get_hashmap_for_decompression(mappings: Vec<HuffmanMapping>) -> Box<HashMap<V
 
 // header format: 1Byte: value; 1Byte: len_in_bits_of_huffman-code; 1-(32):Bytes for huffman-code
 fn get_huffman_code_header_for_file(
-    huffman_codes: Box<HashMap<u8, Vec<u8>>>,
+    huffman_codes: Box<HashMap<u8, Vec<u8>, BuildCompressionHasher>>,
 ) -> Vec<HuffmanMapping> {
     let mut mappings: Vec<HuffmanMapping> = Vec::new();
     for key in huffman_codes.keys() {
