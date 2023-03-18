@@ -10,9 +10,7 @@ impl Hasher for CompressionHasher {
     }
 
     fn write(&mut self, bytes: &[u8]) {
-        for byte in bytes {
-            self.state += *byte as u64;
-        }
+        self.state = *bytes.get(0).unwrap() as u64;
     }
 }
 
