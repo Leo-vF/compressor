@@ -4,32 +4,38 @@ use super::huffman_tree::*;
 use std::collections::HashMap;
 use std::ops::Deref;
 
-fn get_smallest_node_by_index(nodes: &Vec<Node>) -> usize {
-    let mut smallest_node = 0;
-    for i in 0..nodes.len() {
-        if nodes[i].value_frequency < nodes[smallest_node].value_frequency {
-            smallest_node = i;
-        }
-    }
-    return smallest_node;
-}
-
 // takes a &Vec<Count> and returns a Huffman-tree
 fn create_huffman_tree(value_frequencies: &Vec<Count>) -> Node {
     let mut nodes: Vec<Node> = Vec::new();
     for frequency in value_frequencies {
         let node = Node::new(frequency.count, Some(frequency.char));
-        nodes.push(node);
+        let mut i = 0;
+        while i < nodes.len() && node.value_frequency > nodes[i].value_frequency {
+            i += 1;
+        }
+        if i == nodes.len() {
+            nodes.push(node);
+        } else {
+            nodes.insert(i, node);
+        }
     }
 
     while nodes.len() > 1 {
         // find smallest two nodes according to probability and remove them from Vec
-        let node_1 = Box::from(nodes.swap_remove(get_smallest_node_by_index(&nodes)));
-        let node_2 = Box::from(nodes.swap_remove(get_smallest_node_by_index(&nodes)));
+        let node_1 = Box::from(nodes.pop().unwrap());
+        let node_2 = Box::from(nodes.pop().unwrap());
         // call 'create_upper_node' and add the new node to nodes
 
         let node: Node = Node::create_upper_node(node_1, node_2);
-        nodes.push(node);
+        let mut i = 0;
+        while i > nodes.len() && node.value_frequency > nodes[i].value_frequency {
+            i += 1;
+        }
+        if i == nodes.len() {
+            nodes.push(node);
+        } else {
+            nodes.insert(i, node);
+        }
     }
     return nodes.pop().unwrap();
 }
