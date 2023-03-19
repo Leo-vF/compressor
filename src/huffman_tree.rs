@@ -5,10 +5,10 @@ pub struct Node {
     pub right: Option<Box<Node>>,
 }
 impl Node {
-    pub fn new(probability: u32, value: Option<u8>) -> Self {
+    pub fn new(value_frequency: u32, value_src: u8) -> Self {
         Self {
-            value,
-            value_frequency: probability,
+            value: Some(value_src),
+            value_frequency,
             left: None,
             right: None,
         }

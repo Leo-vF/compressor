@@ -15,12 +15,7 @@ fn get_smallest_node_by_index(nodes: &Vec<Node>) -> usize {
 }
 
 // takes a &Vec<Count> and returns a Huffman-tree
-fn create_huffman_tree(value_frequencies: &Vec<Count>) -> Node {
-    let mut nodes: Vec<Node> = Vec::new();
-    for frequency in value_frequencies {
-        let node = Node::new(frequency.count, Some(frequency.char));
-        nodes.push(node);
-    }
+fn create_huffman_tree(nodes: &mut Vec<Node>) -> Node {
     while nodes.len() > 1 {
         // find smallest two nodes according to probability and remove them from Vec
         let node_1 = Box::from(nodes.swap_remove(get_smallest_node_by_index(&nodes)));
@@ -35,31 +30,30 @@ fn create_huffman_tree(value_frequencies: &Vec<Count>) -> Node {
 
 // creates a Huffman-tree from a bytestream
 fn create_huffman_tree_from_bytestream(input: &Vec<u8>) -> Node {
-    let mut value_frequencies: Vec<Count> = Vec::new();
+    let mut value_frequencies: Vec<Node> = Vec::new();
     for i in 0..input.len() {
         // TODO maybe multy thread
         // if value is fresh create new Count else increase 'probs' by 1;
         let mut contains = false;
         for k in 0..value_frequencies.len() {
-            if value_frequencies[k].char == input[i] {
-                value_frequencies[k].count += 1;
+            if value_frequencies[k].value.is_some()
+                && value_frequencies[k].value.unwrap() == input[i]
+            {
+                value_frequencies[k].value_frequency += 1;
                 contains = true;
                 break;
             }
         }
         if !contains {
-            let count = Count {
-                char: input[i],
-                count: 1,
-            };
-            value_frequencies.push(count);
+            let node = Node::new(1, input[i]);
+            value_frequencies.push(node);
         }
     }
-    return create_huffman_tree(&value_frequencies);
+    return create_huffman_tree(&mut value_frequencies);
 }
 
 // takes a Huffman-Tree and returns a Hashmap with <value, huffman-code>
-fn get_hashmap_for_compression(
+fn get_huffman_code_resolver_for_compression(
     // replace hashmap with array
     data: &Vec<u8>,
 ) -> Box<[Vec<u8>; 257]> {
@@ -67,7 +61,7 @@ fn get_hashmap_for_compression(
     const INIT_VALUE: Vec<u8> = Vec::new();
     let mut huffman_codes: Box<[Vec<u8>; 257]> = Box::new([INIT_VALUE; 257]);
     let mut current_huffman_code: Vec<u8> = Vec::new();
-    rec_hashmap_for_compression(
+    rec_huffmancodes_for_compression(
         &mut Some(&huffman_tree),
         &mut huffman_codes,
         &mut current_huffman_code,
@@ -75,7 +69,7 @@ fn get_hashmap_for_compression(
     return huffman_codes;
 }
 
-fn rec_hashmap_for_compression(
+fn rec_huffmancodes_for_compression(
     node: &Option<&Node>,
     huffman_codes: &mut Box<[Vec<u8>; 257]>,
     current_huffman_code: &mut Vec<u8>,
@@ -92,7 +86,7 @@ fn rec_hashmap_for_compression(
                         Some(left) => {
                             // add a '0' to the huffman-code and go int the next deeper left-node
                             current_huffman_code.push(0);
-                            rec_hashmap_for_compression(
+                            rec_huffmancodes_for_compression(
                                 &mut Some(left.deref().clone()),
                                 huffman_codes,
                                 current_huffman_code,
@@ -104,7 +98,7 @@ fn rec_hashmap_for_compression(
                         None => {}
                         Some(right) => {
                             current_huffman_code.push(1);
-                            rec_hashmap_for_compression(
+                            rec_huffmancodes_for_compression(
                                 &mut Some(right.deref().clone()),
                                 huffman_codes,
                                 current_huffman_code,
@@ -191,7 +185,7 @@ fn get_huffman_code_header_for_file(huffman_codes: Box<[Vec<u8>; 257]>) -> Vec<H
 }
 
 pub fn compress(data: Vec<u8>) -> File {
-    let huffman_codes = get_hashmap_for_compression(&data);
+    let huffman_codes = get_huffman_code_resolver_for_compression(&data);
     let mut compressed_data: Vec<u8> = Vec::new();
 
     let mut compressed_byte: u8 = 0;
