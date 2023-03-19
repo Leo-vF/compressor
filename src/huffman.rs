@@ -1,5 +1,4 @@
 use super::files::*;
-use super::hashing::*;
 use super::huffman_tree::*;
 use std::collections::HashMap;
 use std::ops::Deref;
@@ -27,32 +26,32 @@ fn create_huffman_tree(nodes: &mut Vec<Node>) -> Node {
     }
     return nodes.pop().unwrap();
 }
-
-// creates a Huffman-tree from a bytestream
-fn create_huffman_tree_from_bytestream(input: &Vec<u8>) -> Node {
-    let mut value_frequencies: Vec<Node> = Vec::new();
-    for i in 0..input.len() {
-        // TODO maybe multy thread
-        // if value is fresh create new Count else increase 'probs' by 1;
+fn analyse_bytestream(dest: &mut Vec<Node>, data: &Vec<u8>, index_from: usize, index_to: usize) {
+    for i in index_from..index_to {
         let mut contains = false;
-        for k in 0..value_frequencies.len() {
-            if value_frequencies[k].value.is_some()
-                && value_frequencies[k].value.unwrap() == input[i]
-            {
-                value_frequencies[k].value_frequency += 1;
+        for k in 0..dest.len() {
+            if dest[k].value.is_some() && dest[k].value.unwrap() == data[i] {
+                dest[k].value_frequency += 1;
                 contains = true;
                 break;
             }
         }
         if !contains {
-            let node = Node::new(1, input[i]);
-            value_frequencies.push(node);
+            let node = Node::new(1, data[i]);
+            dest.push(node);
         }
     }
+}
+
+// creates a Huffman-tree from a bytestream
+fn create_huffman_tree_from_bytestream(input: &Vec<u8>) -> Node {
+    if input.len() > 1000 {}
+    let mut value_frequencies: Vec<Node> = Vec::new();
+    analyse_bytestream(&mut value_frequencies, input, 0, input.len());
     return create_huffman_tree(&mut value_frequencies);
 }
 
-// takes a Huffman-Tree and returns a Hashmap with <value, huffman-code>
+// takes a Huffman-Tree and returns an Array  with 'value' as index and Vec<huffman-codes> as value
 fn get_huffman_code_resolver_for_compression(
     // replace hashmap with array
     data: &Vec<u8>,
@@ -61,7 +60,7 @@ fn get_huffman_code_resolver_for_compression(
     const INIT_VALUE: Vec<u8> = Vec::new();
     let mut huffman_codes: Box<[Vec<u8>; 257]> = Box::new([INIT_VALUE; 257]);
     let mut current_huffman_code: Vec<u8> = Vec::new();
-    rec_huffmancodes_for_compression(
+    rec_huffman_codes_for_compression(
         &mut Some(&huffman_tree),
         &mut huffman_codes,
         &mut current_huffman_code,
@@ -69,7 +68,7 @@ fn get_huffman_code_resolver_for_compression(
     return huffman_codes;
 }
 
-fn rec_huffmancodes_for_compression(
+fn rec_huffman_codes_for_compression(
     node: &Option<&Node>,
     huffman_codes: &mut Box<[Vec<u8>; 257]>,
     current_huffman_code: &mut Vec<u8>,
@@ -86,7 +85,7 @@ fn rec_huffmancodes_for_compression(
                         Some(left) => {
                             // add a '0' to the huffman-code and go int the next deeper left-node
                             current_huffman_code.push(0);
-                            rec_huffmancodes_for_compression(
+                            rec_huffman_codes_for_compression(
                                 &mut Some(left.deref().clone()),
                                 huffman_codes,
                                 current_huffman_code,
@@ -98,7 +97,7 @@ fn rec_huffmancodes_for_compression(
                         None => {}
                         Some(right) => {
                             current_huffman_code.push(1);
-                            rec_huffmancodes_for_compression(
+                            rec_huffman_codes_for_compression(
                                 &mut Some(right.deref().clone()),
                                 huffman_codes,
                                 current_huffman_code,
@@ -127,11 +126,8 @@ fn rec_huffmancodes_for_compression(
 }
 
 // takes a the header of an comp-file and returns a Hashmap with <huffman-code, value>
-fn get_hashmap_for_decompression(
-    mappings: Vec<HuffmanMapping>,
-) -> Box<HashMap<Vec<u8>, u8, BuildCompressionHasher>> {
-    let mut decompression_hashmap: Box<HashMap<Vec<u8>, u8, BuildCompressionHasher>> =
-        Box::new(HashMap::with_hasher(BuildCompressionHasher));
+fn get_hashmap_for_decompression(mappings: Vec<HuffmanMapping>) -> Box<HashMap<Vec<u8>, u8>> {
+    let mut decompression_hashmap: Box<HashMap<Vec<u8>, u8>> = Box::new(HashMap::new());
     for mut huffman_mapping in mappings {
         let mut encoding: Vec<u8> = Vec::new();
         let number_of_bits_in_last_byte = (huffman_mapping.len_of_encoding
@@ -216,7 +212,7 @@ pub fn compress(data: Vec<u8>) -> File {
     return compressed_file;
 }
 
-fn get_longest(map: &Box<HashMap<Vec<u8>, u8, BuildCompressionHasher>>) -> usize {
+fn get_longest(map: &Box<HashMap<Vec<u8>, u8>>) -> usize {
     let mut max = 0;
     for i in map.keys() {
         if i.len() > max {
