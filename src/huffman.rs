@@ -3,7 +3,6 @@ use super::hashing::*;
 use super::huffman_tree::*;
 use std::collections::HashMap;
 use std::ops::Deref;
-use std::time::Instant;
 
 fn get_smallest_node_by_index(nodes: &Vec<Node>) -> usize {
     let mut smallest_node = 0;
@@ -50,12 +49,8 @@ fn analyse_bytestream(
 fn create_huffman_tree_from_bytestream(input: &Vec<u8>) -> Node {
     let mut value_frequencies: HashMap<u8, Node, BuildCompressionHasher> =
         HashMap::with_hasher(BuildCompressionHasher);
-    // takes  52ms at 5 mb data to compress
-    let start = Instant::now();
     analyse_bytestream(&mut value_frequencies, input, 0, input.len());
 
-    let duration = start.elapsed();
-    println!("Time needed for 'analyse_bytestream': {:?}", duration);
     return create_huffman_tree(
         &mut value_frequencies
             .into_iter()
@@ -66,13 +61,7 @@ fn create_huffman_tree_from_bytestream(input: &Vec<u8>) -> Node {
 
 // takes a Huffman-Tree and returns an Array  with 'value' as index and Vec<huffman-codes> as value
 fn get_huffman_code_resolver_for_compression(data: &Vec<u8>) -> Box<[Vec<u8>; 257]> {
-    let start = Instant::now();
     let huffman_tree = create_huffman_tree_from_bytestream(&data);
-    let duration = start.elapsed();
-    println!(
-        ">> Time needed for 'create_huffman_tree_from_bytestream': {:?}",
-        duration
-    );
 
     const INIT_VALUE: Vec<u8> = Vec::new();
     let mut huffman_codes: Box<[Vec<u8>; 257]> = Box::new([INIT_VALUE; 257]);
@@ -200,7 +189,6 @@ pub fn compress(data: Vec<u8>) -> File {
     let huffman_codes = get_huffman_code_resolver_for_compression(&data);
     let mut compressed_data: Vec<u8> = Vec::new();
 
-    let start = Instant::now();
     let mut compressed_byte: u8 = 0;
     let mut pos_in_byte: u8 = 7; // bit offset in byte
     for byte in data {
@@ -215,8 +203,6 @@ pub fn compress(data: Vec<u8>) -> File {
             }
         }
     }
-    let duration = start.elapsed();
-    println!("Time needed for 'ACTUAL COMPRESSION': {:?}", duration);
 
     // calc bit offset for header
     pos_in_byte = (pos_in_byte + 1) % 8;
@@ -245,7 +231,6 @@ fn get_longest(map: &Box<HashMap<Vec<u8>, u8>>) -> usize {
 pub fn decompress(compressed_file: File) -> Vec<u8> {
     let mut data: Vec<u8> = Vec::new();
     let huffman_code_to_byte = get_hashmap_for_decompression(compressed_file.mappings);
-    let length_of_longest_huffman_code = get_longest(&huffman_code_to_byte);
     let mut huffman_code: Vec<u8> = Vec::new();
     let mut _compressed_byte: u8 = 0;
     for i in 0..compressed_file.data.len() - 1 {
