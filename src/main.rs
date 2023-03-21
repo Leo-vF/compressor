@@ -2,6 +2,7 @@ use std::env;
 use std::time::Instant;
 
 mod files;
+mod hashing;
 mod huffman;
 mod huffman_tree;
 
