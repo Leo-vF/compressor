@@ -103,7 +103,7 @@ fn rec_huffman_codes_for_compression(
                             // add a '0' to the huffman-code and go int the next deeper left-node
                             current_huffman_code.push(0);
                             rec_huffman_codes_for_compression(
-                                &mut Some(left.deref().clone()),
+                                &mut Some(left.deref()),
                                 huffman_codes,
                                 current_huffman_code,
                             );
@@ -115,7 +115,7 @@ fn rec_huffman_codes_for_compression(
                         Some(right) => {
                             current_huffman_code.push(1);
                             rec_huffman_codes_for_compression(
-                                &mut Some(right.deref().clone()),
+                                &mut Some(right),
                                 huffman_codes,
                                 current_huffman_code,
                             );
@@ -127,13 +127,12 @@ fn rec_huffman_codes_for_compression(
                     // check if there is only one u8 to be encoded
                     if current_huffman_code.len() == 0 {
                         current_huffman_code.push(1);
-
-                        huffman_codes[value as usize] = current_huffman_code.clone();
+                        huffman_codes[value as usize] = current_huffman_code.to_owned();
                         huffman_codes[256].push(value);
                         current_huffman_code.pop();
                     } else {
                         // create huffman_code for the found value
-                        huffman_codes[value as usize] = current_huffman_code.clone();
+                        huffman_codes[value as usize] = current_huffman_code.to_owned();
                         huffman_codes[256].push(value);
                     }
                 }
@@ -170,8 +169,8 @@ fn get_hashmap_for_decompression(mappings: Vec<HuffmanMapping>) -> Box<HashMap<V
 // header format: 1Byte: value; 1Byte: len_in_bits_of_huffman-code; 1-(32):Bytes for huffman-code
 fn get_huffman_code_header_for_file(huffman_codes: Box<[Vec<u8>; 257]>) -> Vec<HuffmanMapping> {
     let mut mappings: Vec<HuffmanMapping> = Vec::new();
-    for key in huffman_codes[256].clone() {
-        let tmp = huffman_codes[key as usize].clone();
+    for key in &huffman_codes[256] {
+        let tmp = &huffman_codes[*key as usize];
 
         let length_of_encoding = 1 + ((tmp.len() as isize - 1) / 8) as usize;
         let mut encoding: Vec<u8> = Vec::new();
@@ -191,7 +190,7 @@ fn get_huffman_code_header_for_file(huffman_codes: Box<[Vec<u8>; 257]>) -> Vec<H
             last_encoding_byte += tmp.get(((length_of_encoding - 1) * 8) + k).unwrap() << (7 - k);
         }
         encoding.push(last_encoding_byte);
-        let mapping = HuffmanMapping::new(key.clone(), tmp.len() as u8, encoding);
+        let mapping = HuffmanMapping::new(*key, tmp.len() as u8, encoding);
         mappings.push(mapping);
     }
     return mappings;
@@ -205,7 +204,7 @@ pub fn compress(data: Vec<u8>) -> File {
     let mut compressed_byte: u8 = 0;
     let mut pos_in_byte: u8 = 7; // bit offset in byte
     for byte in data {
-        for bit in huffman_codes[byte as usize].clone() {
+        for bit in &huffman_codes[byte as usize] {
             compressed_byte += bit << pos_in_byte;
             if pos_in_byte == 0 {
                 pos_in_byte = 7;
@@ -254,7 +253,7 @@ pub fn decompress(compressed_file: File) -> Vec<u8> {
         for k in 0..8 {
             huffman_code.push((_compressed_byte >> 7 - k) & 0x1);
             if huffman_code_to_byte.get(&*huffman_code).is_some() {
-                let data_byte = huffman_code_to_byte.get(&*huffman_code).unwrap().clone();
+                let data_byte = *huffman_code_to_byte.get(&*huffman_code).unwrap();
                 data.push(data_byte);
                 huffman_code.clear();
             }
