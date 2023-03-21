@@ -9,3 +9,4 @@ edition = "2021"
 opt-level = 3
 
 [dependencies]
+assert_cmd = "2.0.10"
