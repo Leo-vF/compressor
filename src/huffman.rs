@@ -252,10 +252,14 @@ pub fn decompress(compressed_file: File) -> Vec<u8> {
         _compressed_byte = *compressed_file.data.get(i).unwrap();
         for k in 0..8 {
             huffman_code.push((_compressed_byte >> 7 - k) & 0x1);
-            if huffman_code_to_byte.get(&*huffman_code).is_some() {
-                let data_byte = *huffman_code_to_byte.get(&*huffman_code).unwrap();
-                data.push(data_byte);
-                huffman_code.clear();
+            let data_byte;
+            match huffman_code_to_byte.get(&*huffman_code) {
+                None => {}
+                Some(byte) => {
+                    data_byte = *byte;
+                    data.push(data_byte);
+                    huffman_code.clear();
+                }
             }
             if huffman_code.len() > length_of_longest_huffman_code {
                 panic!("ERROR! Huffman invalid!");
