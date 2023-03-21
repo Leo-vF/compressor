@@ -219,15 +219,6 @@ pub fn compress(data: Vec<u8>) -> File {
     return compressed_file;
 }
 
-fn get_longest(map: &Box<HashMap<Vec<u8>, u8>>) -> usize {
-    let mut max = 0;
-    for i in map.keys() {
-        if i.len() > max {
-            max = i.len();
-        }
-    }
-    return max;
-}
 pub fn decompress(compressed_file: File) -> Vec<u8> {
     let mut data: Vec<u8> = Vec::new();
     let huffman_code_to_byte = get_hashmap_for_decompression(compressed_file.mappings);
@@ -245,9 +236,6 @@ pub fn decompress(compressed_file: File) -> Vec<u8> {
                     data.push(data_byte);
                     huffman_code.clear();
                 }
-            }
-            if huffman_code.len() > length_of_longest_huffman_code {
-                panic!("ERROR! Huffman invalid!");
             }
         }
     }
