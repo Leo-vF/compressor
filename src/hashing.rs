@@ -13,7 +13,7 @@ impl Hasher for CompressionHasher {
         match bytes.get(0) {
             None => {}
             Some(byte) => {
-                self.state ^= *byte as u64;
+                self.state = *byte as u64;
             }
         }
     }

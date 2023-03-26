@@ -131,8 +131,8 @@ fn rec_huffman_codes_for_compression(
 }
 
 // takes a the header of an comp-file and returns a Hashmap with <huffman-code, value>
-fn get_hashmap_for_decompression(mappings: Vec<HuffmanMapping>) -> Box<HashMap<Vec<u8>, u8>> {
-    let mut decompression_hashmap: Box<HashMap<Vec<u8>, u8>> = Box::new(HashMap::new());
+fn get_hashmap_for_decompression(mappings: Vec<HuffmanMapping>) -> HashMap<Vec<u8>, u8> {
+    let mut decompression_hashmap: HashMap<Vec<u8>, u8> = HashMap::new();
     for mut huffman_mapping in mappings {
         let mut encoding: Vec<u8> = Vec::new();
         let number_of_bits_in_last_byte = (huffman_mapping.len_of_encoding
@@ -228,12 +228,10 @@ pub fn decompress(compressed_file: File) -> Vec<u8> {
         _compressed_byte = *compressed_file.data.get(i).unwrap();
         for k in 0..8 {
             huffman_code.push((_compressed_byte >> 7 - k) & 0x1);
-            let data_byte;
             match huffman_code_to_byte.get(&*huffman_code) {
                 None => {}
                 Some(byte) => {
-                    data_byte = *byte;
-                    data.push(data_byte);
+                    data.push(*byte);
                     huffman_code.clear();
                 }
             }
