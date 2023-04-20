@@ -38,9 +38,7 @@ fn analyse_bytestream(
             None => {
                 dest.insert(data[i], Node::new(1, data[i]));
             }
-            Some(node) => {
-                node.value_frequency += 1;
-            }
+            Some(node) => node.value_frequency += 1,
         }
     }
 }
